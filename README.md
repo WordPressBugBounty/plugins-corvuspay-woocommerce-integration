@@ -1,0 +1,1 @@
+# plugins-corvuspay-woocommerce-integration
