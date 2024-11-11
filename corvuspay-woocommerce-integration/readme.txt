@@ -1,9 +1,9 @@
 === CorvusPay WooCommerce Payment Gateway ===
 Contributors: Corvus Pay d.o.o.
 Tags: payment, credit card, corvuspay, woocommerce
-Requires at least: 4.0
+Requires at least: 6.0
 Tested up to: 6.6
-Stable tag: 2.6.1
+Stable tag: 2.6.2
 Requires PHP: 5.6
 License: GNU General Public License v2.0 (or later)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -125,6 +125,9 @@ According to the Cash Transaction Fiscalization Law, cards are a payment method 
 10. CorvusPay Wallet stored credit card.
 
 == Changelog ==
+
+= 2.6.2 =
+* Fixed paths to Block-based checkout related files.
 
 = 2.6.1 =
 * Added nonce and permission check to the AJAX action for completing orders to enhance security.

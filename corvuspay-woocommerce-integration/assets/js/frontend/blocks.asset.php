@@ -6,5 +6,5 @@
 		'wp-html-entities',
 		'wp-i18n'
 	),
-	'version'      => '1'
+	'version'      => WC_CORVUSPAY_VERSION
 );

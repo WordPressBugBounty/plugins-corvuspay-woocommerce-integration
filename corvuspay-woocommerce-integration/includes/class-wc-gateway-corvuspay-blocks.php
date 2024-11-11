@@ -46,26 +46,26 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
 	 * @return array
 	 */
 	public function get_payment_method_script_handles() {
-		$script_path       = '/assets/js/frontend/blocks.js';
-		$script_asset_path = '/wp-content/plugins/corvuspay-woocommerce-integration' . '/assets/js/frontend/blocks.asset.php';
+		$script_path       = plugins_url( 'assets/js/frontend/blocks.js', WC_CORVUSPAY_FILE );
+		$script_asset_path = WC_CORVUSPAY_PATH . '/assets/js/frontend/blocks.asset.php' ;
+		$languages_path    = WC_CORVUSPAY_PATH . '/languages';
 		$script_asset      = file_exists( $script_asset_path )
 			? require( $script_asset_path )
 			: array(
 				'dependencies' => array(),
 				'version'      => '1'
 			);
-		$script_url        = '/wp-content/plugins/corvuspay-woocommerce-integration' . $script_path;
 
 		wp_register_script(
 			'wc-gateway-corvuspay-blocks',
-			$script_url,
+			$script_path,
 			$script_asset[ 'dependencies' ],
 			$script_asset[ 'version' ],
 			true
 		);
 
 		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( 'wc-gateway-corvuspay-blocks', 'corvuspay-woocommerce-integration', '/wp-content/plugins/corvuspay-woocommerce-integration' . '/languages/' );
+			wp_set_script_translations( 'wc-gateway-corvuspay-blocks', 'corvuspay-woocommerce-integration', $languages_path );
 		}
 
 		return [ 'wc-gateway-corvuspay-blocks' ];
