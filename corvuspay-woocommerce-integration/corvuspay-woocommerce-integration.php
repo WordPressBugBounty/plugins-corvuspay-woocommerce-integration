@@ -3,16 +3,16 @@
  * Plugin Name: CorvusPay WooCommerce Payment Gateway
  * Plugin URI: https://www.corvuspay.com/
  * Description: Extends WooCommerce with CorvusPay Credit Card payments.
- * Version: 2.6.2
+ * Version: 2.6.3
  * Author: Corvus Pay d.o.o.
  * Author URI: https://www.corvuspay.com/
- * Copyright: © 2024 Corvus Pay
+ * Copyright: © 2025 Corvus Pay
  * License: GNU General Public License v2.0 (or later)
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Requires at least: 6.0
- * Tested up to: 6.6
+ * Tested up to: 6.7.2
  * WC requires at least: 6.3.0
- * WC tested up to: 9.1.4
+ * WC tested up to: 9.6.2
  * Text Domain: corvuspay-woocommerce-integration
  * Domain Path: /languages/
  *
@@ -53,7 +53,7 @@ function woocommerce_corvuspay_notice_missing_wc() {
  */
 function woocommerce_corvuspay_init() {
 	define( 'WC_CORVUSPAY_SETTINGS_VERSION', 4 );
-	define( 'WC_CORVUSPAY_VERSION', '2.6.2' );
+	define( 'WC_CORVUSPAY_VERSION', '2.6.3' );
 	define( 'WC_CORVUSPAY_FILE', __FILE__ );
 	define( 'WC_CORVUSPAY_PATH', dirname( __FILE__ ) );
 

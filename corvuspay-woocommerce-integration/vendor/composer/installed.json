@@ -2,12 +2,18 @@
     "packages": [
         {
             "name": "corvuspay/corvuspay_wallet_php_sdk",
-            "version": "1.4.3",
-            "version_normalized": "1.4.3.0",
+            "version": "1.4.4",
+            "version_normalized": "1.4.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/corvuspay/corvuspay_wallet_php_sdk.git",
-                "reference": "bf3291a90bdbb16c81f822014d9422ca4ada2a28"
+                "reference": "21d78da830a8e43ef68fc295914e8a695f04b296"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/corvuspay/corvuspay_wallet_php_sdk/zipball/21d78da830a8e43ef68fc295914e8a695f04b296",
+                "reference": "21d78da830a8e43ef68fc295914e8a695f04b296",
+                "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
@@ -21,18 +27,23 @@
             "require-dev": {
                 "monolog/monolog": "*"
             },
-            "time": "2024-04-15T08:04:33+00:00",
+            "time": "2025-02-21T12:44:16+00:00",
             "type": "library",
-            "installation-source": "source",
+            "installation-source": "dist",
             "autoload": {
                 "files": [
                     "init.php"
                 ]
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "CorvusPay Wallet PHP SDK",
+            "support": {
+                "issues": "https://github.com/corvuspay/corvuspay_wallet_php_sdk/issues",
+                "source": "https://github.com/corvuspay/corvuspay_wallet_php_sdk/tree/1.4.4"
+            },
             "install-path": "../corvuspay/corvuspay_wallet_php_sdk"
         },
         {
@@ -89,6 +100,6 @@
             "install-path": "../psr/log"
         }
     ],
-    "dev": true,
+    "dev": false,
     "dev-package-names": []
 }
