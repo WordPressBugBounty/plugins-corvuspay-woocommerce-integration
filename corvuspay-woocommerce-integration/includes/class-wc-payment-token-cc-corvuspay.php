@@ -26,13 +26,13 @@ class WC_Payment_Token_CC_CorvusPay extends WC_Payment_Token_CC {
 	 *
 	 * @return int Token ID. Returns 0 on failure.
 	 */
-	public function new_corvuspay_token( $gateway_id, $account_id, $card_type, $last4, $expiry_month, $expiry_year ) {
+	public function new_corvuspay_token( $gateway_id, $account_id, $card_type, $last4, $expiry_month, $expiry_year, $user_id ) {
 		$token_array = array(
 			'account_id'     => $account_id,
 		);
 		$this->set_token( wp_json_encode( $token_array ) );
 		$this->set_gateway_id( $gateway_id );
-		$this->set_user_id( get_current_user_id() );
+		$this->set_user_id( $user_id );
 
 		$this->set_card_type( $card_type );
 		$this->set_last4( $last4 );

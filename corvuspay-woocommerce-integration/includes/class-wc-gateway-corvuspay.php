@@ -109,8 +109,22 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 			update_option( 'corvuspay_settings_version', WC_CORVUSPAY_SETTINGS_VERSION );
 		}
 
-		$this->init_form_fields();
-		$this->init_settings();
+		try {
+			if (!function_exists('curl_version')) {
+				throw new Exception('PHP cURL is not installed on this server. CorvusPay requires cURL to function properly.');
+			}
+
+			$this->init_form_fields();
+			$this->init_settings();
+		} catch ( Exception $e ) {
+			$this->log->error( 'CorvusPay Initialization Failed: ' . $e->getMessage() );
+
+			add_action('admin_notices', function() use ($e) {
+				echo '<div class="notice notice-error"><p><strong>CorvusPay Error:</strong> ' . esc_html($e->getMessage()) . '</p></div>';
+			});
+
+			deactivate_plugins( 'corvuspay-woocommerce-integration/corvuspay-woocommerce-integration.php' );
+		}
 
 		$this->title       = $this->get_option( 'title' );
 		$this->description = $this->get_option( 'description' );
@@ -146,6 +160,12 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		add_action( 'woocommerce_order_item_add_action_buttons', array( $this, 'add_capture_button' ) );
 		add_action( 'wp_ajax_corvuspay_complete_order', array( $this, 'complete_order' ) );
 		add_filter( 'woocommerce_order_fully_refunded_status', array( $this, 'corvuspay_cancel_voided_order' ), 10, 2 );
+		add_action( 'rest_api_init', array( $this, 'register_corvuspay_rest_routes' ) );
+        add_action( 'woocommerce_admin_order_data_after_order_details', array(
+            $this,
+            'add_check_order_status_button_to_order_details'
+        ) );
+        add_action( 'wp_ajax_corvuspay_check_order_status', array( $this, 'check_order_status' ) );
 
 		if ( $this->options->subscriptions ) {
 			add_action( "woocommerce_scheduled_subscription_payment_{$this->id}", array(
@@ -164,6 +184,31 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 		add_action( 'wp_enqueue_scripts', array( $this, 'add_theme_scripts' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ), 10, 1 );
+	}
+
+	/**
+	 * Registers two REST API endpoints (/success/ and /cancel/) under the corvuspay namespace for handling payment status updates from CorvusPay.
+	 */
+	public function register_corvuspay_rest_routes() {
+		register_rest_route(
+			'corvuspay',
+			'/success/',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'corvuspay_success_handler' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
+		register_rest_route(
+			'corvuspay',
+			'/cancel/',
+			array(
+				'methods'             => 'POST',
+				'callback'            => array( $this, 'corvuspay_cancel_handler' ),
+				'permission_callback' => '__return_true',
+			)
+		);
 	}
 
 	/**
@@ -266,9 +311,11 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 	 * Add CSS.
 	 */
 	public function add_theme_scripts() {
-		wp_enqueue_style( 'corvuspay', plugins_url( 'assets/css/corvuspay.css', WC_CORVUSPAY_FILE ), array(), '1.0.0' );
-		wp_register_script( 'corvuspay', plugins_url( 'assets/js/frontend/corvuspay-checkout.js', WC_CORVUSPAY_FILE ) );
-		wp_enqueue_script( 'corvuspay' );
+		if ( is_checkout() ) {
+			wp_enqueue_style( 'corvuspay', plugins_url( 'assets/css/corvuspay.css', WC_CORVUSPAY_FILE ), array(), '1.0.0' );
+			wp_register_script( 'corvuspay', plugins_url( 'assets/js/frontend/corvuspay-checkout.js', WC_CORVUSPAY_FILE ) );
+			wp_enqueue_script( 'corvuspay' );
+		}
 	}
 
 	/**
@@ -277,6 +324,8 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
      * @param string $hook
 	 */
 	public function admin_scripts( $hook ) {
+        global $wp_scripts;
+
 		if ( 'woocommerce_page_wc-settings' === get_current_screen()->id ) {
 			wp_enqueue_script( 'woocommerce_corvuspay_admin', plugins_url( 'assets/js/corvuspay-admin.js', WC_CORVUSPAY_FILE ), array(), '1.2.0', true );
 			wp_enqueue_style( 'woocommerce_corvuspay_admin', plugins_url( 'assets/css/corvuspay-admin.css', WC_CORVUSPAY_FILE ), array(), '1.0.0' );
@@ -300,15 +349,31 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
             // Targeting only Orders which payment method is CorvusPay.
             if( $order->get_payment_method() != 'corvuspay')
                 return;
-			wp_enqueue_script( 'jquery' );
-			wp_enqueue_script( 'corvuspay-capture', plugins_url( 'assets/js/corvuspay-capture.js', WC_CORVUSPAY_FILE ), array( 'jquery' ), time(), true );
-			$corvuspay_vars = array(
-				'ajax_url'            => admin_url( 'admin-ajax.php' ),
-				'nonce'               => wp_create_nonce( 'corvuspay_capture_validation' ),
-				'confirm_description' => __( 'Are you sure you wish to process this capture? This action cannot be undone.', 'corvuspay-woocommerce-integration' )
-			);
-			wp_localize_script( 'corvuspay-capture', 'corvuspay_vars', $corvuspay_vars );
-		}
+
+            wp_enqueue_script( 'jquery' );
+            wp_enqueue_script( 'jquery-ui-dialog' );
+            wp_enqueue_script( 'jquery-ui-core' );
+
+            $src = "https://code.jquery.com/ui/{$wp_scripts->registered['jquery-ui-core']->ver}/themes/smoothness/jquery-ui.css";
+            wp_enqueue_style( 'corvuspay-admin-ui-css', $src, false, WC_CORVUSPAY_VERSION, false );
+
+            wp_enqueue_script( 'corvuspay-capture', plugins_url( 'assets/js/corvuspay-capture.js', WC_CORVUSPAY_FILE ), array( 'jquery' ), time(), true );
+            $corvuspay_capture_vars = array(
+                'ajax_url'            => admin_url( 'admin-ajax.php' ),
+                'nonce'               => wp_create_nonce( 'corvuspay_capture_validation' ),
+                'confirm_description' => __( 'Are you sure you wish to process this capture? This action cannot be undone.', 'corvuspay-woocommerce-integration' )
+            );
+            wp_localize_script( 'corvuspay-capture', 'corvuspay_capture_vars', $corvuspay_capture_vars );
+
+            wp_enqueue_script( 'corvuspay-check-status', plugins_url( 'assets/js/corvuspay-check-status.js', WC_CORVUSPAY_FILE ), array( 'jquery-ui-dialog' ), time(), true );
+            $corvuspay_check_status_vars = array(
+                'ajax_url'                   => admin_url( 'admin-ajax.php' ),
+                'nonce'                      => wp_create_nonce( 'corvuspay_check_status_validation' ),
+                'certificate_required_error' => __( 'To check the status of the order, please import the certificate in the plugin settings.', 'corvuspay-woocommerce-integration' ),
+                'dialog_title'               => __( 'Order status', 'corvuspay-woocommerce-integration' )
+            );
+            wp_localize_script( 'corvuspay-check-status', 'corvuspay_check_status_vars', $corvuspay_check_status_vars );
+        }
 	}
 
 	/**
@@ -521,8 +586,10 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 	/**
 	 * Handle Success URL. Completes order on success or changes order status to 'on-hold' for authorizations. Stores payment tokens.
+	 *
+	 * @param WP_REST_Request|string $request The request data. It can be a WP_REST_Request object or a string.
 	 */
-	public function corvuspay_success_handler() {
+	public function corvuspay_success_handler($request) {
 		try {
 			$this->log->debug( 'Enter corvuspay_success_handler $_POST: ' . wp_json_encode( $_POST ) );
 
@@ -604,10 +671,10 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 					$user_id   = $saved_token->get_user_id();
 
 					if ( $last4 === substr( (string) $xml->{'card-details'}, - 4 ) &&
-						 $exp_year === (string) $date['year'] &&
-						 $cc_type === (string) $xml->{'cc-type'} &&
-						 $exp_month === str_pad( (string) $date['month'], 2, '0', STR_PAD_LEFT ) &&
-						 $user_id === get_current_user_id()
+					     $exp_year === (string) $date['year'] &&
+					     $cc_type === (string) $xml->{'cc-type'} &&
+					     $exp_month === str_pad( (string) $date['month'], 2, '0', STR_PAD_LEFT ) &&
+					     $user_id === $order->get_user_id()
 					) {
 						$duplicate = true;
 						break;
@@ -615,12 +682,13 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 				}
 				if ( ! $duplicate || wcs_order_contains_subscription( $order ) || wcs_order_contains_renewal( $order ) ) {
 					if ( $token->new_corvuspay_token(
-							$this->id,
-							$parameters['account_id'],
-							(string) $xml->{'cc-type'},
-							substr( (string) $xml->{'card-details'}, - 4 ),
-							$date['month'],
-							$date['year']
+						$this->id,
+						$parameters['account_id'],
+						(string) $xml->{'cc-type'},
+						substr( (string) $xml->{'card-details'}, - 4 ),
+						$date['month'],
+						$date['year'],
+						$order->get_user_id()
 					) ) {
 						$order->update_meta_data( '_corvuspay_token_id', $token->get_id() );
 						$order->save_meta_data();
@@ -649,8 +717,10 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 			if ( 'add' === $order->get_meta( '_corvuspay_token' ) ) {
 				wp_safe_redirect( wc_get_endpoint_url( 'payment-methods', '', wc_get_page_permalink( 'myaccount' ) ) );
+				exit;
 			} else {
 				wp_safe_redirect( $order->get_checkout_order_received_url() );
+				exit;
 			}
 		} catch ( Exception $e ) {
 			$this->log->error( $e->getMessage() . ' $_POST: ' . wp_json_encode( $_POST ) );
@@ -687,8 +757,10 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 	/**
 	 * Handle Cancel URL. Redirects to Order Cancellation URL or changes order status to 'cancelled' for failed attempts to add a payment method.
+	 *
+	 * @param WP_REST_Request|string $request The request data. It can be a WP_REST_Request object or a string.
 	 */
-	public function corvuspay_cancel_handler() {
+	public function corvuspay_cancel_handler($request) {
 		try {
 			$this->log->debug( 'Enter corvuspay_cancel_handler $_POST: ' . wp_json_encode( $_POST ) );
 
@@ -699,8 +771,13 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 			if ( 'add' === $order->get_meta( '_corvuspay_token' ) ) {
 				$order->update_status( 'cancelled' );
 				wp_safe_redirect( wc_get_endpoint_url( 'payment-methods', '', wc_get_page_permalink( 'myaccount' ) ) );
+				exit;
 			} else {
+				if ( $request != "" ) {
+					$order->update_status( 'cancelled', __( 'Your order was cancelled.', 'woocommerce' ) );
+				}
 				wp_safe_redirect( $order->get_cancel_order_url_raw() );
+				exit;
 			}
 		} catch ( Exception $e ) {
 			$this->log->error( $e->getMessage() . ' $_POST: ' . wp_json_encode( $_POST ) );
@@ -745,6 +822,27 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 	}
 
 	/**
+	 * Gets an endpoint URL using the WordPress REST API.
+	 * If the REST API is unavailable, set empty string.
+	 *
+	 * @since 2.6.4
+	 *
+	 * @param string $endpoint Endpoint for URL.
+	 * @return string REST API URL for the endpoint or fallback message.
+	 */
+	public static function get_rest_url( $endpoint ) {
+		// Ensure WordPress is fully loaded before calling rest_url()
+		if ( function_exists( 'rest_url' ) && did_action( 'init' ) ) {
+			$rest_url = rest_url( "corvuspay/{$endpoint}" );
+
+			if ( ! empty( $rest_url ) && filter_var( $rest_url, FILTER_VALIDATE_URL ) ) {
+				return esc_url( $rest_url );
+			}
+		}
+		return esc_url( get_home_url( null, "wp-json/corvuspay/{$endpoint}" ) );
+	}
+
+	/**
 	 * Gets the Checkout URI. Depends on environment.
 	 *
 	 * @return string Checkout URI
@@ -778,20 +876,26 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 		foreach ( WC_Order_CorvusPay::CARD_BRANDS as $key => $value ) {
 			$search_array[]  = ":" . $key . ":";
-			$replace_array[] = '<img style="width:10%" src=' . plugins_url( "assets/img/cards/{$key}.svg", WC_CORVUSPAY_FILE ) . ' alt="' . $key . '">';
+			$replace_array[] = '<img src=' . plugins_url( "assets/img/cards/{$key}.svg", WC_CORVUSPAY_FILE ) . ' alt="' . $key . '">';
 		}
 
 		$search_array[]  = ":iban:";
-		$replace_array[] = '<img style="width:10%" src=' . plugins_url( "assets/img/outline/iban.svg", WC_CORVUSPAY_FILE ) . ' alt="iban">';
+		$replace_array[] = '<img src=' . plugins_url( "assets/img/outline/iban.svg", WC_CORVUSPAY_FILE ) . ' alt="iban">';
 
 		$search_array[]  = ":paysafecard:";
-		$replace_array[] = '<img style="width:10%" src=' . plugins_url( "assets/img/outline/paysafecard.svg", WC_CORVUSPAY_FILE ) . ' alt="paysafecard">';
+		$replace_array[] = '<img src=' . plugins_url( "assets/img/outline/paysafecard.svg", WC_CORVUSPAY_FILE ) . ' alt="paysafecard">';
 
 		$search_array[]  = ":card:";
-		$replace_array[] = '<img style="width:10%" src=' . plugins_url( "assets/img/outline/card.svg", WC_CORVUSPAY_FILE ) . ' alt="card">';
+		$replace_array[] = '<img src=' . plugins_url( "assets/img/outline/card.svg", WC_CORVUSPAY_FILE ) . ' alt="card">';
 
 		$search_array[]  = ":wallet:";
-		$replace_array[] = '<img style="width:10%" src=' . plugins_url( "assets/img/outline/wallet.svg", WC_CORVUSPAY_FILE ) . ' alt="wallet">';
+		$replace_array[] = '<img src=' . plugins_url( "assets/img/outline/wallet.svg", WC_CORVUSPAY_FILE ) . ' alt="wallet">';
+
+		$search_array[]  = ":applepay:";
+		$replace_array[] = '<img src=' . plugins_url( "assets/img/outline/applepay.svg", WC_CORVUSPAY_FILE ) . ' alt="applepay">';
+
+		$search_array[]  = ":googlepay:";
+		$replace_array[] = '<img src=' . plugins_url( "assets/img/outline/googlepay.svg", WC_CORVUSPAY_FILE ) . ' alt="googlepay">';
 
 		return str_replace( $search_array, $replace_array, $subject );
 
@@ -1352,7 +1456,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
                (int) $_POST["woocommerce_corvuspay_form_time_limit_seconds"] > 900 ||
                (int) $_POST["woocommerce_corvuspay_form_time_limit_seconds"] < 1 ) ) {
 			add_action( 'admin_notices', array( $this, 'unsupported_time_limit_error' ) );
-			$this->log->notice( 'Unsupported time limit value. Valid range is from 1 to 900.', 'corvuspay-woocommerce-integration'  );
+			$this->log->notice( 'Unsupported time limit value. Valid range is from 1 to 900.' );
 		}
 
 		$environment         = $_POST["woocommerce_corvuspay_environment"];
@@ -1362,7 +1466,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		           strpos( $order_number_format, '{order_number}' ) !== false ) ) ) {
 			$_POST["woocommerce_corvuspay_{$environment}_order_number_format"] = $this->get_option( $environment . '_order_number_format' );
 			add_action( 'admin_notices', array( $this, 'unsupported_order_number_format_error' ) );
-			$this->log->notice( 'The "Order Number Format" field is required and must contain {post_id} or {order_number}.', 'corvuspay-woocommerce-integration' );
+			$this->log->notice( 'The "Order Number Format" field is required and must contain {post_id} or {order_number}.' );
 		}
 
 		$parameter_p12     = "woocommerce_corvuspay_{$environment}_certificate";
@@ -1375,7 +1479,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		if ( isset( $_POST["woocommerce_corvuspay_tokenization"] ) && !$isset_cert) {
 			unset( $_POST['woocommerce_corvuspay_tokenization'] );
 			add_action( 'admin_notices', array( $this, 'certificate_required_when_tokenization_enabled_error' ) );
-			$this->log->notice( 'Certificate is required when tokenization is enabled.', 'corvuspay-woocommerce-integration' );
+			$this->log->notice( 'Certificate is required when tokenization is enabled.' );
 		}
 
 		if ( $_POST['woocommerce_corvuspay_form_installments'] === "map" && (count( $installments_map ) === 0 || !$is_valid_installments_map)) {
@@ -1388,7 +1492,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 			}
 
 			add_action( 'admin_notices', array( $this, 'invalid_installments_map_error' ) );
-			$this->log->notice( 'Invalid advanced installments', 'corvuspay-woocommerce-integration' );
+			$this->log->notice( 'Invalid advanced installments' );
 		}
 
 		if ( count( $installments_map ) > 0 && !$isset_cert ) {
@@ -1399,7 +1503,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 			}
 
 			add_action( 'admin_notices', array( $this, 'certificate_required_when_installments_map_set_error' ) );
-			$this->log->notice( 'Certificate is required when installments map is set.', 'corvuspay-woocommerce-integration' );
+			$this->log->notice( 'Certificate is required when installments map is set.' );
 		}
 
 		return parent::process_admin_options();
@@ -1578,19 +1682,9 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 	 * @param WC_Order $order Order object.
 	 */
 	public function add_capture_button( $order ) {
-		$payment_method   = $order->get_payment_method();
-		$payment_gateways = WC()->payment_gateways()->payment_gateways();
-		$gateway          = isset( $payment_gateways[ $payment_method ] ) ? $payment_gateways[ $payment_method ] : null;
-
-		if ( OrderUtil::custom_orders_table_usage_is_enabled() ) {
-			$isOrder = OrderUtil::is_order( $order->get_id(), wc_get_order_types() );
-		} else {
-			$isOrder = 'shop_order' === get_post_type( $order->get_id() );
-		}
-		// only display the button for corvuspay orders
-		if ( !$isOrder || 'auth' !== $order->get_meta( '_corvuspay_action' ) || ! $gateway || ! ( $gateway instanceof WC_Gateway_CorvusPay ) ) {
-			return;
-		}
+        if ( ! $this->is_valid_corvuspay_order( $order ) || 'auth' !== $order->get_meta( '_corvuspay_action' ) ) {
+            return;
+        }
 		?>
         <button type="button" class="button capture"
                 id="partial_complete"><?php echo __( 'Capture Charge', 'corvuspay-woocommerce-integration' ); ?></button>
@@ -1919,13 +2013,125 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		}
 	}
 
-/**
-	 * Returns the payment gateway id.
-	 *
-	 * @see WC_Payment_Gateway::$id
-	 * @return string Payment gateway id.
-	 */
-	public function get_id() {
-		return $this->id;
-	}
+    /**
+     * Adds a "Check order status" button on the WooCommerce order details page.
+     * This button allows the user to check the order status via an AJAX request.
+     *
+     * @param WC_Order $order The WooCommerce order object.
+     */
+    function add_check_order_status_button_to_order_details( $order ) {
+        $order_status = $order->get_status();
+        if ( ! $this->is_valid_corvuspay_order( $order ) || ! in_array( $order_status, [
+                'processing',
+                'on-hold',
+                'refunded',
+                'completed'
+            ] ) ) {
+            return;
+        }
+        ?>
+        <button class="button check-order-status-button" style="margin-top: 20px;"
+                data-order-id="<?php echo esc_attr( $order->get_id() ); ?>">
+            <?php esc_html_e( 'Check order status', 'corvuspay-woocommerce-integration' ); ?>
+        </button>
+        <?php
+    }
+
+    /**
+     * Checks if the given WooCommerce order is a valid CorvusPay shop order.
+     *
+     * @param WC_Order $order The WooCommerce order object.
+     *
+     * @return bool True if the order is a valid WooCommerce shop order, false otherwise.
+     */
+    function is_valid_corvuspay_order( $order ) {
+        if ( ! $order instanceof WC_Order ) {
+            return false;
+        }
+
+        $payment_method   = $order->get_payment_method();
+        $payment_gateways = WC()->payment_gateways()->payment_gateways();
+        $gateway          = isset( $payment_gateways[ $payment_method ] ) ? $payment_gateways[ $payment_method ] : null;
+
+        if ( OrderUtil::custom_orders_table_usage_is_enabled() ) {
+            $is_shop_order = OrderUtil::is_order( $order->get_id(), wc_get_order_types() );
+        } else {
+            $is_shop_order = 'shop_order' === get_post_type( $order->get_id() );
+        }
+
+        return (
+            $is_shop_order &&
+            ( $gateway instanceof WC_Gateway_CorvusPay )
+        );
+    }
+
+    /**
+     * Ajax callback for check order status.
+     */
+    function check_order_status() {
+        check_ajax_referer( 'corvuspay_check_status_validation', '_nonce' );
+
+        if ( ! current_user_can( 'manage_woocommerce' ) ) {
+            wp_send_json_error( __( 'You do not have sufficient permissions to perform this action.', 'corvuspay-woocommerce-integration' ) );
+        }
+
+        if ( ! $this->options->certificate[ $this->options->environment ] ) {
+            wp_send_json_error( __( 'To check the status of the order, please import the certificate in the plugin settings.', 'corvuspay-woocommerce-integration' ) );
+        }
+
+        $order_id = intval( $_POST['order_id'] );
+        $order    = wc_get_order( $order_id );
+
+        $back_data = array( 'error' => 0 );
+        if ( $order !== false && $this->is_valid_corvuspay_order( $order ) ) {
+            $result = $this->get_order_status_from_corvuspay( $order );
+            if ( $result ) {
+                wp_send_json_success( array( 'xml' => $result->asXML() ) );
+            } else {
+                wp_send_json_error( __( 'Failed to retrieve the order status.', 'corvuspay-woocommerce-integration' ) );
+            }
+        } else {
+            wp_send_json_error( array(
+                'message' => __( 'This is not a valid CorvusPay order.', 'corvuspay-woocommerce-integration' )
+            ) );
+        }
+        wp_send_json( $back_data );
+    }
+
+    /**
+     * Retrieves the order status from CorvusPay API.
+     *
+     * @param WC_Order $order The WooCommerce order object.
+     *
+     * @return SimpleXMLElement|null Parsed XML response from CorvusPay API, or null on failure.
+     */
+    function get_order_status_from_corvuspay( $order ) {
+        if ( ! $order instanceof WC_Order ) {
+            return null;
+        }
+
+        $status_order  = new WC_Order_CorvusPay( $this->log, $this->options, 'api-status', $order );
+        $api           = new CorvusPay_API( $this->log, $this->options, $status_order->get_client() );
+        $server_output = $api->status( $status_order );
+
+        $xml = simplexml_load_string( $server_output );
+
+        if ( $xml === false ) {
+            $this->log->error( 'Failed to parse CorvusPay API response.' );
+
+            return null;
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Returns the payment gateway id.
+     *
+     * @return string Payment gateway id.
+     * @see WC_Payment_Gateway::$id
+     */
+    public function get_id() {
+        return $this->id;
+    }
 }

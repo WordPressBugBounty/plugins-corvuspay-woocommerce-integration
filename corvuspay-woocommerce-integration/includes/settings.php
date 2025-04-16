@@ -39,9 +39,9 @@ return array(
 	'description'                 => array(
 		'title'       => __( 'Description', 'corvuspay-woocommerce-integration' ),
 		'type'        => 'textarea',
-		'description' => __( 'This controls the description which the user sees during checkout. You can add the following symbols: :amex: :dina: :diners: :discover: :jcb: :maestro: :master: :visa: :card: :iban: :paysafecard: :wallet:', 'corvuspay-woocommerce-integration' ),
+		'description' => __( 'This controls the description which the user sees during checkout. You can add the following symbols: :amex: :dina: :diners: :discover: :jcb: :maestro: :master: :visa: :card: :iban: :paysafecard: :wallet: :applepay: :googlepay:', 'corvuspay-woocommerce-integration' ),
 		'default'     => __( 'Online transaction processing.', 'corvuspay-woocommerce-integration' ) . ' 
-:amex: :dina: :diners: :discover: :maestro: :master: :visa: :iban: :paysafecard:',
+:amex: :dina: :diners: :discover: :maestro: :master: :visa: :iban: :paysafecard: :applepay: :googlepay:',
 		'desc_tip'    => true,
 	),
 	'tokenization'                => array(
@@ -183,15 +183,30 @@ return array(
 		'default'     => 'sale',
 		'desc_tip'    => true,
 	),
+	'old_urls_section' => array(
+		'title'       => '',
+		'type'        => 'title',
+		'description' => '<div class="notice notice-warning is-dismissible">' .
+		                 '<p class="notice-header">' . __( 'Important Notice:', 'corvuspay-woocommerce-integration' ) . '</p>' .
+		                 '<p>' . __( 'Please update to the new URLs, as the old ones will be deprecated and removed in the next minor version.', 'corvuspay-woocommerce-integration' ) . '</p>' .
+		                 '<div class="urls">' .
+		                 '<p><strong>' . __( 'Old URLs', 'corvuspay-woocommerce-integration' ) . ':</strong></p>' .
+		                 '<ul>' .
+		                 '<li><strong>Success URL:</strong> ' . esc_url( WC_Gateway_CorvusPay::get_url( 'success' ) ) . '</li>' .
+		                 '<li><strong>Cancel URL:</strong>' . esc_url( WC_Gateway_CorvusPay::get_url( 'success' ) ) . '</li>' .
+		                 '</ul>' .
+		                 '</div>' .
+		                 '</div>',
+	),
 	'success_url'                 => array(
 		'title'       => __( 'Success URL', 'corvuspay-woocommerce-integration' ),
 		'type'        => 'title',
-		'description' => __( 'Copy Success URL to the CorvusPay Merchant Center', 'corvuspay-woocommerce-integration' ) . ': <strong>' . WC_Gateway_CorvusPay::get_url( 'success' ) . '</strong>',
+		'description' => __( 'Copy Success URL to the CorvusPay Merchant Center', 'corvuspay-woocommerce-integration' ) . ': <strong>' . WC_Gateway_CorvusPay::get_rest_url( 'success' ) . '</strong>',
 	),
 	'cancel_url'                  => array(
 		'title'       => __( 'Cancel URL', 'corvuspay-woocommerce-integration' ),
 		'type'        => 'title',
-		'description' => __( 'Copy Cancel URL to the CorvusPay Merchant Center', 'corvuspay-woocommerce-integration' ) . ': <strong>' . WC_Gateway_CorvusPay::get_url( 'cancel' ) . '</strong>',
+		'description' => __( 'Copy Cancel URL to the CorvusPay Merchant Center', 'corvuspay-woocommerce-integration' ) . ': <strong>' . WC_Gateway_CorvusPay::get_rest_url( 'cancel' ) . '</strong>',
 	),
 	'form_options'                => array(
 		'title'       => __( 'Form Options', 'corvuspay-woocommerce-integration' ),
@@ -300,5 +315,5 @@ return array(
 		),
 		'default'     => 'error',
 		'desc_tip'    => true,
-	),
+	)
 );

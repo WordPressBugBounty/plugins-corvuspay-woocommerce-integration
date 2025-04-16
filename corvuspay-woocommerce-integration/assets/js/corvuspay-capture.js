@@ -39,7 +39,7 @@
                     );
                 }),
                 $('.inside').on('click', '#capture', function () {
-                    var confirmed = confirm(corvuspay_vars.confirm_description);
+                    var confirmed = confirm(corvuspay_capture_vars.confirm_description);
                     if (confirmed) {
                         visibleCaptureInputAndButton(false);
                         // get the order_id from the button tag
@@ -49,11 +49,11 @@
                         // send the data via ajax to the sever
                         $.ajax({
                             type: 'POST',
-                            url: corvuspay_vars.ajax_url,
+                            url: corvuspay_capture_vars.ajax_url,
                             dataType: 'json',
                             data: {
                                 action: 'corvuspay_complete_order',
-                                _nonce: corvuspay_vars.nonce,
+                                _nonce: corvuspay_capture_vars.nonce,
                                 order_id: order_id,
                                 order_amount: order_amount
                             },

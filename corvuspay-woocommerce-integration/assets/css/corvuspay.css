@@ -6,7 +6,13 @@
 .payment_method_corvuspay > label {
     display: inline-block!important;
 }
-
 span[activepaymentmethod="corvuspay"] > img{
     display: inline;
+    width: 6%;
+}
+.payment_method_corvuspay p img  {
+    float: none!important;
+    display: inline-block!important;
+    vertical-align: middle;
+    width:10%
 }

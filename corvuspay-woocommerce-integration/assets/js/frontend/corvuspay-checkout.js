@@ -1,5 +1,10 @@
 jQuery(function ($) {
     "use strict";
+
+    if (typeof window.wc === 'undefined') {
+        return;
+    }
+
     const o = window.wc.wcSettings;
     const l = (0, o.getPaymentMethodData)("corvuspay", {});
 
