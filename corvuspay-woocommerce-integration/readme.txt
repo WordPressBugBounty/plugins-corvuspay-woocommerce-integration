@@ -3,7 +3,7 @@ Contributors: Corvus Pay d.o.o.
 Tags: payment, credit card, corvuspay, woocommerce
 Requires at least: 6.0
 Tested up to: 6.8
-Stable tag: 2.6.4
+Stable tag: 2.6.5
 Requires PHP: 5.6
 License: GNU General Public License v2.0 (or later)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -125,6 +125,10 @@ According to the Cash Transaction Fiscalization Law, cards are a payment method 
 10. CorvusPay Wallet stored credit card.
 
 == Changelog ==
+
+= 2.6.5 =
+* Fixed: Function _load_textdomain_just_in_time was called incorrectly.
+* Fixed: Correct total amount is now shown when using advanced installments.
 
 = 2.6.4 =
 * Improved: Added Apple Pay and Google Pay icons, allowing merchants to include them in the payment method description.

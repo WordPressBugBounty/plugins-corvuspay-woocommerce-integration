@@ -3,7 +3,7 @@
  * Plugin Name: CorvusPay WooCommerce Payment Gateway
  * Plugin URI: https://www.corvuspay.com/
  * Description: Extends WooCommerce with CorvusPay Credit Card payments.
- * Version: 2.6.4
+ * Version: 2.6.5
  * Author: Corvus Pay d.o.o.
  * Author URI: https://www.corvuspay.com/
  * Copyright: © 2025 Corvus Pay
@@ -12,7 +12,7 @@
  * Requires at least: 6.0
  * Tested up to: 6.8
  * WC requires at least: 6.3.0
- * WC tested up to: 9.7.1
+ * WC tested up to: 9.8.5
  * Text Domain: corvuspay-woocommerce-integration
  * Domain Path: /languages/
  *
@@ -23,7 +23,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-add_action( 'plugins_loaded', 'woocommerce_corvuspay_init', 0 );
+define( 'WC_CORVUSPAY_SETTINGS_VERSION', 4 );
+define( 'WC_CORVUSPAY_VERSION', '2.6.5' );
+define( 'WC_CORVUSPAY_FILE', __FILE__ );
+define( 'WC_CORVUSPAY_PATH', dirname( __FILE__ ) );
+
+add_action( 'init', 'woocommerce_corvuspay_init', 0 );
 
 // Make the CorvusPay gateway available to WC.
 add_filter( 'woocommerce_payment_gateways', 'add_gateway' );
@@ -52,10 +57,6 @@ function woocommerce_corvuspay_notice_missing_wc() {
  * Init CorvusPay WooCommerce gateway plugin.
  */
 function woocommerce_corvuspay_init() {
-	define( 'WC_CORVUSPAY_SETTINGS_VERSION', 4 );
-	define( 'WC_CORVUSPAY_VERSION', '2.6.4' );
-	define( 'WC_CORVUSPAY_FILE', __FILE__ );
-	define( 'WC_CORVUSPAY_PATH', dirname( __FILE__ ) );
 
     $domain = 'corvuspay-woocommerce-integration';
     $locale = apply_filters( 'plugin_locale', determine_locale(), $domain );

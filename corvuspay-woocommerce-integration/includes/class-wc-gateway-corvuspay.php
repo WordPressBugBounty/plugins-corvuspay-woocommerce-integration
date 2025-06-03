@@ -1618,10 +1618,11 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 			return $total_rows;
 		}
 
-		// Recalculate totals
-		$order->calculate_totals();
+        // Force reload order from database to get correct total amount
+        $order_id = $order->get_id();
+        $order = wc_get_order( $order_id );
 
-		$this->log->info( 'Order with discount. Recalculating totals.' );
+		$this->log->info( 'Order with discount. Reloading order from DB to update displayed total for email output.' );
 
 		if ( $total_rows['order_total'] ) {
 			$total_rows['order_total']['value'] = wc_price( $order->get_total() );
