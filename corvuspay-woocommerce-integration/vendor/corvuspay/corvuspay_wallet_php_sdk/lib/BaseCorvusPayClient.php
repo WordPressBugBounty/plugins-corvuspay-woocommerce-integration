@@ -2,9 +2,9 @@
 
 namespace CorvusPay;
 
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
+use CorvusPay\Vendor\Psr\Log\LoggerAwareTrait;
+use CorvusPay\Vendor\Psr\Log\LoggerInterface;
+use CorvusPay\Vendor\Psr\Log\NullLogger;
 
 class BaseCorvusPayClient implements CorvusPayClientInterface
 {

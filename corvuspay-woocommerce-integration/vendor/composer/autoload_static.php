@@ -4,13 +4,18 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitd1affde043ed703cca4745a5da0a92e7
+class ComposerStaticInit22d5a5575e783e8cfc5a8de876287ad1
 {
     public static $files = array (
         '757f13d7b1a3bb02e7c9527a68252767' => __DIR__ . '/..' . '/corvuspay/corvuspay_wallet_php_sdk/init.php',
+        '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
     );
 
     public static $prefixLengthsPsr4 = array (
+        'S' => 
+        array (
+            'Symfony\\Polyfill\\Mbstring\\' => 26,
+        ),
         'P' => 
         array (
             'Psr\\Log\\' => 8,
@@ -18,6 +23,10 @@ class ComposerStaticInitd1affde043ed703cca4745a5da0a92e7
     );
 
     public static $prefixDirsPsr4 = array (
+        'Symfony\\Polyfill\\Mbstring\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-mbstring',
+        ),
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/Psr/Log',
@@ -26,25 +35,31 @@ class ComposerStaticInitd1affde043ed703cca4745a5da0a92e7
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'Psr\\Log\\AbstractLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/AbstractLogger.php',
-        'Psr\\Log\\InvalidArgumentException' => __DIR__ . '/..' . '/psr/log/Psr/Log/InvalidArgumentException.php',
-        'Psr\\Log\\LogLevel' => __DIR__ . '/..' . '/psr/log/Psr/Log/LogLevel.php',
-        'Psr\\Log\\LoggerAwareInterface' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerAwareInterface.php',
-        'Psr\\Log\\LoggerAwareTrait' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerAwareTrait.php',
-        'Psr\\Log\\LoggerInterface' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerInterface.php',
-        'Psr\\Log\\LoggerTrait' => __DIR__ . '/..' . '/psr/log/Psr/Log/LoggerTrait.php',
-        'Psr\\Log\\NullLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/NullLogger.php',
-        'Psr\\Log\\Test\\DummyTest' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/DummyTest.php',
-        'Psr\\Log\\Test\\LoggerInterfaceTest' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/LoggerInterfaceTest.php',
-        'Psr\\Log\\Test\\TestLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/Test/TestLogger.php',
+        'CorvusPay\\Vendor\\Psr\\Container\\ContainerExceptionInterface' => __DIR__ . '/../..' . '/vendor_prefixed/container/src/ContainerExceptionInterface.php',
+        'CorvusPay\\Vendor\\Psr\\Container\\ContainerInterface' => __DIR__ . '/../..' . '/vendor_prefixed/container/src/ContainerInterface.php',
+        'CorvusPay\\Vendor\\Psr\\Container\\NotFoundExceptionInterface' => __DIR__ . '/../..' . '/vendor_prefixed/container/src/NotFoundExceptionInterface.php',
+        'CorvusPay\\Vendor\\Psr\\EventDispatcher\\EventDispatcherInterface' => __DIR__ . '/../..' . '/vendor_prefixed/event-dispatcher/src/EventDispatcherInterface.php',
+        'CorvusPay\\Vendor\\Psr\\EventDispatcher\\ListenerProviderInterface' => __DIR__ . '/../..' . '/vendor_prefixed/event-dispatcher/src/ListenerProviderInterface.php',
+        'CorvusPay\\Vendor\\Psr\\EventDispatcher\\StoppableEventInterface' => __DIR__ . '/../..' . '/vendor_prefixed/event-dispatcher/src/StoppableEventInterface.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\AbstractLogger' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/AbstractLogger.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\InvalidArgumentException' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/InvalidArgumentException.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\LogLevel' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/LogLevel.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\LoggerAwareInterface' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/LoggerAwareInterface.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\LoggerAwareTrait' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/LoggerAwareTrait.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\LoggerInterface' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/LoggerInterface.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\LoggerTrait' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/LoggerTrait.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\NullLogger' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/NullLogger.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\Test\\DummyTest' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/Test/DummyTest.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\Test\\LoggerInterfaceTest' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/Test/LoggerInterfaceTest.php',
+        'CorvusPay\\Vendor\\Psr\\Log\\Test\\TestLogger' => __DIR__ . '/../..' . '/vendor_prefixed/log/Psr/Log/Test/TestLogger.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitd1affde043ed703cca4745a5da0a92e7::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitd1affde043ed703cca4745a5da0a92e7::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInitd1affde043ed703cca4745a5da0a92e7::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit22d5a5575e783e8cfc5a8de876287ad1::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit22d5a5575e783e8cfc5a8de876287ad1::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit22d5a5575e783e8cfc5a8de876287ad1::$classMap;
 
         }, null, ClassLoader::class);
     }

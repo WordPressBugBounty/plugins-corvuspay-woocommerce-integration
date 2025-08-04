@@ -7,4 +7,5 @@ $baseDir = dirname($vendorDir);
 
 return array(
     '757f13d7b1a3bb02e7c9527a68252767' => $vendorDir . '/corvuspay/corvuspay_wallet_php_sdk/init.php',
+    '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => $vendorDir . '/symfony/polyfill-mbstring/bootstrap.php',
 );

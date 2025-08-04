@@ -1151,25 +1151,29 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
                                             }
                                             ?>
                                         </select></td>
-                                    <td><input type="text"
+                                    <td><input type="number"
 												title="<?php esc_attr_e( 'Minimum installments', 'corvuspay-woocommerce-integration' ); ?>"
 												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['min_installments'] ); ?>"
-												name="installments_map_min_installments[<?php echo esc_attr( $i ); ?>]"/>
+												name="installments_map_min_installments[<?php echo esc_attr( $i ); ?>]"
+                                                min="0"/>
 									</td>
-									<td><input type="text"
+									<td><input type="number"
 												title="<?php esc_attr_e( 'Maximum installments', 'corvuspay-woocommerce-integration' ); ?>"
 												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['max_installments'] ); ?>"
-												name="installments_map_max_installments[<?php echo esc_attr( $i ); ?>]"/>
+												name="installments_map_max_installments[<?php echo esc_attr( $i ); ?>]"
+                                                min="0"/>
 									</td>
-									<td><input type="text"
+									<td><input type="number"
 												title="<?php esc_attr_e( 'General discount', 'corvuspay-woocommerce-integration' ); ?>"
 												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['general_percentage'] ); ?>"
-												name="installments_map_general_percentage[<?php echo esc_attr( $i ); ?>]"/>
+												name="installments_map_general_percentage[<?php echo esc_attr( $i ); ?>]"
+												min="0"/>
 									</td>
-									<td><input type="text"
+									<td><input type="number"
 												title="<?php esc_attr_e( 'Specific discount', 'corvuspay-woocommerce-integration' ); ?>"
 												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['specific_percentage'] ); ?>"
-												name="installments_map_specific_percentage[<?php echo esc_attr( $i ); ?>]"/>
+												name="installments_map_specific_percentage[<?php echo esc_attr( $i ); ?>]"
+                                                min="0"/>
 									</td>
 								</tr>
 								<?php
@@ -1199,10 +1203,10 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 									<td><select name="installments_map_card_brand[' + size + ']">\<?php foreach ( WC_Order_CorvusPay::CARD_BRANDS as $code => $brand ) { ?>
 										<option value="<?php echo esc_attr( $code ); ?>"><?php echo esc_html( $brand ); ?></option>\<?php echo PHP_EOL; } ?>
 									</select></td>\
-									<td><input type="text" name="installments_map_min_installments[' + size + ']" /></td>\
-									<td><input type="text" name="installments_map_max_installments[' + size + ']" /></td>\
-									<td><input type="text" name="installments_map_general_percentage[' + size + ']" value="0" /></td>\
-									<td><input type="text" name="installments_map_specific_percentage[' + size + ']" value="0" /></td>\
+									<td><input type="number" min="0" name="installments_map_min_installments[' + size + ']" /></td>\
+									<td><input type="number" min="0" name="installments_map_max_installments[' + size + ']" /></td>\
+									<td><input type="number" min="0" name="installments_map_general_percentage[' + size + ']" value="0" /></td>\
+									<td><input type="number" min="0" name="installments_map_specific_percentage[' + size + ']" value="0" /></td>\
 								</tr>').appendTo('#woocommerce_corvuspay_form_installments_map table tbody');
 							jQuery('#woocommerce_corvuspay_form_installments_map select').selectWoo({width: '100%', theme: 'corvuspay'});
 							return false;

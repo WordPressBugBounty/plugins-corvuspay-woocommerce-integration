@@ -2,7 +2,7 @@
 
 namespace CorvusPay;
 
-use Psr\Log\LoggerInterface;
+use CorvusPay\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Class SSlVersion used as enum. Enums were introduced in PHP 8.1 but we use this approach to support clients running older versions of PHP.
