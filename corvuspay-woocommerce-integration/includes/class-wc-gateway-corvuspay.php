@@ -166,6 +166,9 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
             'add_check_order_status_button_to_order_details'
         ) );
         add_action( 'wp_ajax_corvuspay_check_order_status', array( $this, 'check_order_status' ) );
+        add_action( 'woocommerce_subscription_payment_method_updated', array( $this, 'corvuspay_payment_method_changed' ), 10, 3 );
+        add_filter( 'woocommerce_payment_gateway_get_new_payment_method_option_html', array( $this, 'corvuspay_new_payment_method_option' ), 10, 2 );
+        add_filter( 'woocommerce_subscriptions_update_payment_via_pay_shortcode', array( $this, 'maybe_update_payment_method' ), 10, 3 );
 
 		if ( $this->options->subscriptions ) {
 			add_action( "woocommerce_scheduled_subscription_payment_{$this->id}", array(
@@ -384,6 +387,14 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 	 * @return array|null Redirect
 	 */
 	public function process_payment( $order_id ) {
+        if ( $this->is_subscription_payment_change_request() ) {
+            // Skip payment processing for subscription token update
+            return array(
+                'result'   => 'success',
+                'redirect' => wc_get_account_endpoint_url( 'subscriptions' ),
+            );
+        }
+
 		$this->log->info( 'Creating Order with post_id: ' . $order_id . '.' );
 		$order = new WC_Order( $order_id );
 
@@ -599,7 +610,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 			$order = new WC_Order_CorvusPay( $this->log, $this->options, 'callback-signed' );
 
-			$this->log->info( 'Success URL for Order #' . $order->get_id() . '.' );
+			$this->log->info( 'Success URL for Order ' . $order->get_id() . '.' );
 
 			if ( $this->options->installments === 'map' ) {
 				$status_order = new WC_Order_CorvusPay( $this->log, $this->options, 'api-status', $order );
@@ -693,7 +704,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 						$order->update_meta_data( '_corvuspay_token_id', $token->get_id() );
 						$order->save_meta_data();
 					} else {
-						$this->log->error( "Failed to save token for Order #{$order->get_id()}." );
+						$this->log->error( "Failed to save token for Order {$order->get_id()}." );
 					}
 
 					$this->update_subscriptions_payment_token( $order, $token->get_id() );
@@ -766,7 +777,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
 			$order = new WC_Order_CorvusPay( $this->log, $this->options, 'callback' );
 
-			$this->log->info( 'Cancel URL for Order #' . $order->get_id() . '.' );
+			$this->log->info( 'Cancel URL for Order ' . $order->get_id() . '.' );
 
 			if ( 'add' === $order->get_meta( '_corvuspay_token' ) ) {
 				$order->update_status( 'cancelled' );
@@ -854,15 +865,18 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 	/**
 	 * Generate Payment Fields HTML. Removes Credit Card input and adds description.
 	 */
-	public function payment_fields() {
-		$description = $this->replace_card_type_icons();
-		echo wpautop( wptexturize( $description ) );
-		if ( $this->supports( 'tokenization' ) && is_checkout() ) {
-			$this->tokenization_script();
-			$this->saved_payment_methods();
-			$this->save_payment_method_checkbox();
-		}
-	}
+    public function payment_fields() {
+        $description = $this->replace_card_type_icons();
+        echo wpautop( wptexturize( $description ) );
+        if ( $this->supports( 'tokenization' ) && is_checkout() ) {
+            $this->tokenization_script();
+            $this->saved_payment_methods();
+
+            if ( ! $this->is_subscription_payment_change_request() ) {
+                $this->save_payment_method_checkbox();
+            }
+        }
+    }
 
 	/**
 	 * Replace the shortcodes from description with the icons of card types.
@@ -909,6 +923,23 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 	 * @return mixed|string HTML.
 	 */
 	public function get_saved_payment_method_option_html( $token ) {
+        $is_checked = false;
+
+        if ( isset( $_REQUEST['change_payment_method'] ) && ! empty( $_REQUEST['change_payment_method'] ) ) {
+            $subscription_id = absint( $_REQUEST['change_payment_method'] );
+            $subscription = wcs_get_subscription( $subscription_id );
+
+            if ( $subscription ) {
+                $current_token_id = $subscription->get_meta( '_corvuspay_token_id', true );
+
+                if ( $token->get_id() == $current_token_id ) {
+                   $is_checked = true;
+                }
+            }
+        } else {
+            $is_checked = $token->is_default();
+        }
+
 		$html = sprintf(
 			'<li class="woocommerce-SavedPaymentMethods-token">
 				<input id="wc-%1$s-payment-token-%2$s" type="radio" name="wc-%1$s-payment-token" value="%2$s" style="width:auto;" class="woocommerce-SavedPaymentMethods-tokenInput" %4$s />
@@ -917,7 +948,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 			esc_attr( $this->id ),
 			esc_attr( $token->get_id() ),
 			esc_html( $token->get_display_name() ),
-			checked( $token->is_default(), true, false ),
+			checked( $is_checked, true, false ),
 			plugins_url( "assets/img/cards/{$token->get_card_type()}.svg", WC_CORVUSPAY_FILE )
 		);
 
@@ -1109,38 +1140,38 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		return ob_get_clean();
 	}
 
-	/**
-	 * Generate Installments Map HTML.
-	 *
-	 * @return string Installments Map HTML.
-	 */
-	public function generate_installments_map_html() {
-		ob_start();
-		?>
-		<tr valign="top">
-			<th scope="row"
-					class="titledesc"><?php esc_html_e( 'Installments plan:', 'corvuspay-woocommerce-integration' ); ?></th>
-			<td class="forminp" id="woocommerce_corvuspay_form_installments_map">
-				<div class="wc_input_table_wrapper">
-					<table class="widefat wc_input_table sortable" cellspacing="0">
-						<thead>
-						<tr>
-							<th class="sort">&nbsp;</th>
-							<th><?php esc_html_e( 'Card brand', 'corvuspay-woocommerce-integration' ); ?></th>
-							<th><?php esc_html_e( 'Minimum installments', 'corvuspay-woocommerce-integration' ); ?></th>
-							<th><?php esc_html_e( 'Maximum installments', 'corvuspay-woocommerce-integration' ); ?></th>
-							<th><?php esc_html_e( 'General discount', 'corvuspay-woocommerce-integration' ); ?></th>
-							<th><?php esc_html_e( 'Specific discount', 'corvuspay-woocommerce-integration' ); ?></th>
-						</tr>
-						</thead>
-						<tbody>
-						<?php
-						if ( $this->options->installments_map ) {
-							$count = count( $this->options->installments_map );
-							for ( $i = 0; $i < $count; $i ++ ) {
-								?>
-								<tr>
-									<td class="sort"></td>
+    /**
+     * Generate Installments Map HTML.
+     *
+     * @return string Installments Map HTML.
+     */
+    public function generate_installments_map_html() {
+        ob_start();
+        ?>
+        <tr valign="top">
+            <th scope="row"
+                class="titledesc"><?php esc_html_e( 'Installments plan:', 'corvuspay-woocommerce-integration' ); ?></th>
+            <td class="forminp" id="woocommerce_corvuspay_form_installments_map">
+                <div class="wc_input_table_wrapper">
+                    <table class="widefat wc_input_table sortable" cellspacing="0">
+                        <thead>
+                        <tr>
+                            <th class="sort">&nbsp;</th>
+                            <th><?php esc_html_e( 'Card brand', 'corvuspay-woocommerce-integration' ); ?></th>
+                            <th><?php esc_html_e( 'Minimum installments', 'corvuspay-woocommerce-integration' ); ?></th>
+                            <th><?php esc_html_e( 'Maximum installments', 'corvuspay-woocommerce-integration' ); ?></th>
+                            <th><?php esc_html_e( 'General discount', 'corvuspay-woocommerce-integration' ); ?></th>
+                            <th><?php esc_html_e( 'Specific discount', 'corvuspay-woocommerce-integration' ); ?></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        if ( $this->options->installments_map ) {
+                            $count = count( $this->options->installments_map );
+                            for ( $i = 0; $i < $count; $i ++ ) {
+                                ?>
+                                <tr>
+                                    <td class="sort"></td>
                                     <td>
                                         <select title="<?php esc_attr_e('Card brand', 'corvuspay-woocommerce-integration'); ?>"
                                                 name="installments_map_card_brand[<?php echo esc_attr($i); ?>]"><?php foreach (WC_Order_CorvusPay::CARD_BRANDS as $code => $brand) { ?>
@@ -1152,53 +1183,53 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
                                             ?>
                                         </select></td>
                                     <td><input type="number"
-												title="<?php esc_attr_e( 'Minimum installments', 'corvuspay-woocommerce-integration' ); ?>"
-												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['min_installments'] ); ?>"
-												name="installments_map_min_installments[<?php echo esc_attr( $i ); ?>]"
-                                                min="0"/>
-									</td>
-									<td><input type="number"
-												title="<?php esc_attr_e( 'Maximum installments', 'corvuspay-woocommerce-integration' ); ?>"
-												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['max_installments'] ); ?>"
-												name="installments_map_max_installments[<?php echo esc_attr( $i ); ?>]"
-                                                min="0"/>
-									</td>
-									<td><input type="number"
-												title="<?php esc_attr_e( 'General discount', 'corvuspay-woocommerce-integration' ); ?>"
-												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['general_percentage'] ); ?>"
-												name="installments_map_general_percentage[<?php echo esc_attr( $i ); ?>]"
-												min="0"/>
-									</td>
-									<td><input type="number"
-												title="<?php esc_attr_e( 'Specific discount', 'corvuspay-woocommerce-integration' ); ?>"
-												value="<?php echo esc_attr( $this->options->installments_map[ $i ]['specific_percentage'] ); ?>"
-												name="installments_map_specific_percentage[<?php echo esc_attr( $i ); ?>]"
-                                                min="0"/>
-									</td>
-								</tr>
-								<?php
-							}
-						}
-						?>
-						</tbody>
-						<tfoot>
-						<tr>
-							<th colspan="6">
-								<a href="#" class="add button"><?php esc_html_e( '+ Add installment entry', 'corvuspay-woocommerce-integration' ); ?></a>
-								<a href="#" class="remove_rows button"><?php esc_html_e( 'Remove selected installment entry', 'corvuspay-woocommerce-integration' ); ?></a>
-							</th>
-						</tr>
-						</tfoot>
-					</table>
-					<p><?php esc_html_e( 'Example row: "Visa; 1; 2; 10; 15".', 'corvuspay-woocommerce-integration' ); ?></p>
-					<p><?php esc_html_e( 'Explanation: All Visa cards get a 10% discount if customer pays in one payment or in two installments. Some Visa cards, issued by a specific issuer, get a 15% discount under the same conditions. To setup specific discounts, contact CorvusPay.', 'corvuspay-woocommerce-integration' ); ?></p>
-				</div>
-				<script type="text/javascript">
-					jQuery(function () {
-						jQuery('#woocommerce_corvuspay_form_installments_map select').selectWoo({width: '100%', theme: 'corvuspay'});
-						jQuery('#woocommerce_corvuspay_form_installments_map').on('click', 'a.add', function () {
-							var size = jQuery('#woocommerce_corvuspay_form_installments_map').find('tbody tr').length;
-							jQuery('<tr>\
+                                               title="<?php esc_attr_e( 'Minimum installments', 'corvuspay-woocommerce-integration' ); ?>"
+                                               value="<?php echo esc_attr( $this->options->installments_map[ $i ]['min_installments'] ); ?>"
+                                               name="installments_map_min_installments[<?php echo esc_attr( $i ); ?>]"
+                                               min="0"/>
+                                    </td>
+                                    <td><input type="number"
+                                               title="<?php esc_attr_e( 'Maximum installments', 'corvuspay-woocommerce-integration' ); ?>"
+                                               value="<?php echo esc_attr( $this->options->installments_map[ $i ]['max_installments'] ); ?>"
+                                               name="installments_map_max_installments[<?php echo esc_attr( $i ); ?>]"
+                                               min="0"/>
+                                    </td>
+                                    <td><input type="number"
+                                               title="<?php esc_attr_e( 'General discount', 'corvuspay-woocommerce-integration' ); ?>"
+                                               value="<?php echo esc_attr( $this->options->installments_map[ $i ]['general_percentage'] ); ?>"
+                                               name="installments_map_general_percentage[<?php echo esc_attr( $i ); ?>]"
+                                               min="0"/>
+                                    </td>
+                                    <td><input type="number"
+                                               title="<?php esc_attr_e( 'Specific discount', 'corvuspay-woocommerce-integration' ); ?>"
+                                               value="<?php echo esc_attr( $this->options->installments_map[ $i ]['specific_percentage'] ); ?>"
+                                               name="installments_map_specific_percentage[<?php echo esc_attr( $i ); ?>]"
+                                               min="0"/>
+                                    </td>
+                                </tr>
+                                <?php
+                            }
+                        }
+                        ?>
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <th colspan="6">
+                                <a href="#" class="add button"><?php esc_html_e( '+ Add installment entry', 'corvuspay-woocommerce-integration' ); ?></a>
+                                <a href="#" class="remove_rows button"><?php esc_html_e( 'Remove selected installment entry', 'corvuspay-woocommerce-integration' ); ?></a>
+                            </th>
+                        </tr>
+                        </tfoot>
+                    </table>
+                    <p><?php esc_html_e( 'Example row: "Visa; 1; 2; 10; 15".', 'corvuspay-woocommerce-integration' ); ?></p>
+                    <p><?php esc_html_e( 'Explanation: All Visa cards get a 10% discount if customer pays in one payment or in two installments. Some Visa cards, issued by a specific issuer, get a 15% discount under the same conditions. To setup specific discounts, contact CorvusPay.', 'corvuspay-woocommerce-integration' ); ?></p>
+                </div>
+                <script type="text/javascript">
+                    jQuery(function () {
+                        jQuery('#woocommerce_corvuspay_form_installments_map select').selectWoo({width: '100%', theme: 'corvuspay'});
+                        jQuery('#woocommerce_corvuspay_form_installments_map').on('click', 'a.add', function () {
+                            var size = jQuery('#woocommerce_corvuspay_form_installments_map').find('tbody tr').length;
+                            jQuery('<tr>\
 									<td class="sort"></td>\
 									<td><select name="installments_map_card_brand[' + size + ']">\<?php foreach ( WC_Order_CorvusPay::CARD_BRANDS as $code => $brand ) { ?>
 										<option value="<?php echo esc_attr( $code ); ?>"><?php echo esc_html( $brand ); ?></option>\<?php echo PHP_EOL; } ?>
@@ -1208,16 +1239,16 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 									<td><input type="number" min="0" name="installments_map_general_percentage[' + size + ']" value="0" /></td>\
 									<td><input type="number" min="0" name="installments_map_specific_percentage[' + size + ']" value="0" /></td>\
 								</tr>').appendTo('#woocommerce_corvuspay_form_installments_map table tbody');
-							jQuery('#woocommerce_corvuspay_form_installments_map select').selectWoo({width: '100%', theme: 'corvuspay'});
-							return false;
-						});
-					});
-				</script>
-			</td>
-		</tr>
-		<?php
-		return ob_get_clean();
-	}
+                            jQuery('#woocommerce_corvuspay_form_installments_map select').selectWoo({width: '100%', theme: 'corvuspay'});
+                            return false;
+                        });
+                    });
+                </script>
+            </td>
+        </tr>
+        <?php
+        return ob_get_clean();
+    }
 
 	/**
 	 * Returns human readable certificate description with validity.
@@ -2138,5 +2169,157 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
      */
     public function get_id() {
         return $this->id;
+    }
+    /**
+     * Triggered when a subscription payment method is updated.
+     *
+     * @param WC_Subscription $subscription      The subscription object.
+     * @param string          $old_method        Old payment method ID.
+     * @param string          $new_method        New payment method ID.
+     */
+    function corvuspay_payment_method_changed( $subscription, $old_method, $new_method ) {
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        $user_id = $subscription->get_user_id();
+
+        $update_all = (! empty( $_POST['update_all_subscriptions_payment_method'] ) && $_POST['update_all_subscriptions_payment_method'] === '1')
+                      || (! empty( $_POST['update_all_subscriptions'] ) && $_POST['update_all_subscriptions'] === '1');
+
+        $token_id = null;
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( isset( $_POST["wc-{$this->id}-payment-token"] ) && 'new' !== $_POST["wc-{$this->id}-payment-token"] ) {
+            $token_id = wc_clean( $_POST["wc-{$this->id}-payment-token"] );
+        }
+
+        if ( ! $token_id ) {
+            $this->log->notice( "Failed to update token for Subscription #{$subscription->get_id()}." );
+            wc_add_notice( __( 'CorvusPay: changing card failed.', 'corvuspay-woocommerce-integration' ), 'error' );
+            return null;
+        }
+
+        $this->log->info( "Starting update of CorvusPay token for Subscription #{$subscription->get_id()}, User #{$user_id}, Token: {$token_id}" );
+
+        // Update current subscription
+        $this->corvuspay_update_subscription( $subscription, $token_id );
+
+        // Update all other subscriptions if requested
+        if ( $update_all ) {
+            $subscriptions = wcs_get_users_subscriptions( $user_id );
+
+            foreach ( $subscriptions as $sub ) {
+                if ( $sub->get_id() === $subscription->get_id() ) {
+                    continue; // already updated
+                }
+                $this->corvuspay_update_subscription( $sub, $token_id, true );
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Updates a subscription's payment method and CorvusPay token.
+     *
+     * @param WC_Subscription $subscription          The subscription object.
+     * @param string          $token_id              CorvusPay token ID to assign.
+     * @param bool            $is_all_subscriptions  True if updating all subscriptions, false for current only.
+     *
+     * @return bool True if updated, false if skipped due to invalid gateway.
+     */
+    function corvuspay_update_subscription( $subscription, $token_id, $is_all_subscriptions = false ) {
+        $gateway_id = $subscription->get_payment_method();
+        $gateway    = WC()->payment_gateways()->payment_gateways()[ $gateway_id ] ?? false;
+
+        if ( ! $gateway ) {
+            $this->log->warning( "Subscription #{$subscription->get_id()} has invalid gateway: {$gateway_id}. Skipped." );
+            return false;
+        }
+
+        $current_token = $subscription->get_meta( '_corvuspay_token_id' );
+        if ( $current_token === $token_id ) {
+            $this->log->info( "Subscription #{$subscription->get_id()} already has token {$token_id}. Update skipped." );
+            return false;
+        }
+
+        $subscription->set_payment_method( $this->id );
+        $subscription->update_meta_data( '_corvuspay_token_id', $token_id );
+        $subscription->save();
+
+        if ( $is_all_subscriptions ) {
+            $subscription->add_order_note(
+                sprintf(
+                /* translators: %s: CorvusPay token ID */
+                    __( 'CorvusPay token updated. Token ID: %s.', 'corvuspay-woocommerce-integration' ),
+                    $token_id
+                )
+            );
+        } else {
+            $subscription->add_order_note(
+                sprintf(
+                /* translators: %s: CorvusPay token ID. Indicates that customer triggered update for all subscriptions */
+                    __( 'CorvusPay token updated. Token ID: %s. Customer triggered update for all subscriptions.', 'corvuspay-woocommerce-integration' ),
+                    $token_id
+                )
+            );
+        }
+
+        $this->log->notice( "Updated token {$token_id} for Subscription #{$subscription->get_id()}." );
+
+        return true;
+    }
+
+    /**
+     * Remove the "Use a new payment method" option from saved payment methods list.
+     */
+    function corvuspay_new_payment_method_option( $html, $gateway ) {
+        if ( $gateway->id === 'corvuspay' && $this->is_subscription_payment_change_request()) {
+            return '';
+        }
+
+        return $html;
+    }
+
+    /**
+     * Handles subscription payment method updates for CorvusPay.
+     *
+     * Prevents WooCommerce's automatic "update all subscriptions" behavior
+     * and manually updates the payment token if provided.
+     *
+     * @param bool   $update             Original update flag
+     * @param string $new_payment_method New payment method ID
+     * @param object $subscription       Subscription being updated
+     *
+     * @return bool False to stop automatic updates, or original $update
+     */
+    public function maybe_update_payment_method( $update, $new_payment_method, $subscription ) {
+        if ( ! empty( $_POST['update_all_subscriptions_payment_method'] ) && $this->id === $new_payment_method ) {
+            $token_id = $_POST["wc-{$this->id}-payment-token"] ?? null;
+
+            if ( $token_id ) {
+                $this->corvuspay_payment_method_changed( $subscription, $subscription->get_payment_method(), $new_payment_method );
+            }
+
+            return false;
+        }
+
+        return $update;
+    }
+
+    /**
+     * Check if the current request is for changing the payment method
+     * of an active subscription in WooCommerce Subscriptions.
+     *
+     * This method ensures:
+     * - Subscriptions are enabled for this gateway.
+     * - The WooCommerce Subscriptions "Change Payment Gateway" class exists.
+     * - The current request is flagged as a "change payment method" action.
+     *
+     * @return bool True if the request is for changing a subscription payment method, false otherwise.
+     */
+    private function is_subscription_payment_change_request() {
+        return (
+            $this->options->subscriptions
+            && class_exists('WC_Subscriptions_Change_Payment_Gateway')
+            && WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment
+        );
     }
 }

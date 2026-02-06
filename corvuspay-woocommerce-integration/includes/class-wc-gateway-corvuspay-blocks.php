@@ -37,7 +37,7 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
 	 * @return boolean
 	 */
 	public function is_active() {
-		return $this->gateway->is_available();
+		return $this->gateway && $this->gateway->is_available();
 	}
 
 	/**

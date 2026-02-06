@@ -2,14 +2,14 @@
 # This file is distributed under the same license as the CorvusPay WooCommerce Payment Gateway plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: CorvusPay WooCommerce Payment Gateway 2.6.4\n"
+"Project-Id-Version: CorvusPay WooCommerce Payment Gateway 2.7.2\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/corvuspay-woocommerce-integration\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-04-04T09:20:28+00:00\n"
+"POT-Creation-Date: 2025-08-19T07:51:24+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.4.0\n"
 "X-Domain: corvuspay-woocommerce-integration\n"
@@ -47,11 +47,11 @@ msgstr ""
 msgid "Capture %s"
 msgstr ""
 
-#: corvuspay-woocommerce-integration.php:46
+#: corvuspay-woocommerce-integration.php:51
 msgid "CorvusPay requires WooCommerce to be installed and active."
 msgstr ""
 
-#: corvuspay-woocommerce-integration.php:84
+#: corvuspay-woocommerce-integration.php:85
 msgid "Settings"
 msgstr ""
 
@@ -61,7 +61,7 @@ msgstr ""
 
 #: includes/class-corvuspay-api.php:133
 #: includes/class-corvuspay-api.php:243
-#: includes/class-wc-gateway-corvuspay.php:620
+#: includes/class-wc-gateway-corvuspay.php:633
 msgid "An error occurred."
 msgstr ""
 
@@ -88,289 +88,259 @@ msgstr ""
 msgid "For entering of card data users will be redirected to CorvusPay payment form."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:247
+#: includes/class-wc-gateway-corvuspay.php:252
 msgid "CorvusPay WooCommerce Payment Gateway was updated successfully. CorvusPay Success URL and CorvusPay Cancel URL have been changed and have to be updated in CorvusPay Merchant Center. Go to the CorvusPay WooCommerce Payment Gateway plugin settings page to find out more."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:361
+#: includes/class-wc-gateway-corvuspay.php:366
 msgid "Are you sure you wish to process this capture? This action cannot be undone."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:369
+#: includes/class-wc-gateway-corvuspay.php:374
+#: includes/class-wc-gateway-corvuspay.php:2004
 msgid "To check the status of the order, please import the certificate in the plugin settings."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:370
+#: includes/class-wc-gateway-corvuspay.php:375
 msgid "Order status"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:425
-#: includes/class-wc-gateway-corvuspay.php:441
-#: includes/class-wc-gateway-corvuspay.php:444
-#: includes/class-wc-gateway-corvuspay.php:450
-#: includes/class-wc-gateway-corvuspay.php:547
-#: includes/class-wc-gateway-corvuspay.php:552
+#: includes/class-wc-gateway-corvuspay.php:438
+#: includes/class-wc-gateway-corvuspay.php:454
+#: includes/class-wc-gateway-corvuspay.php:457
+#: includes/class-wc-gateway-corvuspay.php:463
+#: includes/class-wc-gateway-corvuspay.php:560
+#: includes/class-wc-gateway-corvuspay.php:565
 msgid "CorvusPay payment failed."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:523
+#: includes/class-wc-gateway-corvuspay.php:536
 msgid "Something went wrong."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:567
+#: includes/class-wc-gateway-corvuspay.php:580
 msgid "Continue to payment"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:580
+#: includes/class-wc-gateway-corvuspay.php:593
 msgid "CorvusPay Process Receipt Failure"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:594
+#: includes/class-wc-gateway-corvuspay.php:607
 msgid "Empty POST data."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:637
+#: includes/class-wc-gateway-corvuspay.php:650
 msgid "CorvusPay payment authorized. Awaiting capture."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:641
+#: includes/class-wc-gateway-corvuspay.php:654
 msgid "Unsupported transaction action."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:699
+#: includes/class-wc-gateway-corvuspay.php:712
 msgid "Payment method already exists."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:708
+#: includes/class-wc-gateway-corvuspay.php:721
 msgid "Refunding card storage transaction"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:724
+#: includes/class-wc-gateway-corvuspay.php:737
 msgid "CorvusPay Success URL Failure"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:741
+#: includes/class-wc-gateway-corvuspay.php:754
 msgid "Discount"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:743
+#: includes/class-wc-gateway-corvuspay.php:756
 msgid "Compensation"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:781
+#: includes/class-wc-gateway-corvuspay.php:794
 msgid "CorvusPay Cancel URL Failure"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:943
+#: includes/class-wc-gateway-corvuspay.php:976
 msgid "Save to account"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:982
+#: includes/class-wc-gateway-corvuspay.php:1015
 msgid "Test Stores settings:"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:984
+#: includes/class-wc-gateway-corvuspay.php:1017
 msgid "Production Stores settings:"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:994
-#: includes/class-wc-gateway-corvuspay.php:1022
+#: includes/class-wc-gateway-corvuspay.php:1027
+#: includes/class-wc-gateway-corvuspay.php:1055
 msgid "Currency"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:998
-#: includes/class-wc-gateway-corvuspay.php:1043
+#: includes/class-wc-gateway-corvuspay.php:1031
+#: includes/class-wc-gateway-corvuspay.php:1076
 #: includes/settings.php:77
 msgid "Test Store ID"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1000
-#: includes/class-wc-gateway-corvuspay.php:1045
+#: includes/class-wc-gateway-corvuspay.php:1033
+#: includes/class-wc-gateway-corvuspay.php:1078
 #: includes/settings.php:126
 msgid "Production Store ID"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1007
-#: includes/class-wc-gateway-corvuspay.php:1056
+#: includes/class-wc-gateway-corvuspay.php:1040
+#: includes/class-wc-gateway-corvuspay.php:1089
 #: includes/settings.php:84
 msgid "Test Secret Key"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1009
-#: includes/class-wc-gateway-corvuspay.php:1058
+#: includes/class-wc-gateway-corvuspay.php:1042
+#: includes/class-wc-gateway-corvuspay.php:1091
 #: includes/settings.php:133
 msgid "Production Secret Key"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1036
-#: includes/class-wc-gateway-corvuspay.php:1093
+#: includes/class-wc-gateway-corvuspay.php:1069
+#: includes/class-wc-gateway-corvuspay.php:1126
 msgid "Other currencies"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1074
+#: includes/class-wc-gateway-corvuspay.php:1107
 msgid "+ Add stores settings entry"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1075
+#: includes/class-wc-gateway-corvuspay.php:1108
 msgid "Remove selected stores settings entry"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1080
+#: includes/class-wc-gateway-corvuspay.php:1113
 msgid "\"Other currencies\" option has low precedence."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1081
+#: includes/class-wc-gateway-corvuspay.php:1114
 msgid "Example row: \"EUR, USD; 123; abc\"."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1082
+#: includes/class-wc-gateway-corvuspay.php:1115
 msgid "Explanation: All orders in EUR or USD will be routed to Store ID 123 using Secret Key \"abc\"."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1119
-msgid "Installments plan:"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1126
-#: includes/class-wc-gateway-corvuspay.php:1142
-msgid "Card brand"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1127
-#: includes/class-wc-gateway-corvuspay.php:1152
-msgid "Minimum installments"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1128
 #: includes/class-wc-gateway-corvuspay.php:1157
-msgid "Maximum installments"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1129
-#: includes/class-wc-gateway-corvuspay.php:1162
-msgid "General discount"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1130
-#: includes/class-wc-gateway-corvuspay.php:1167
-msgid "Specific discount"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1180
-msgid "+ Add installment entry"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1181
-msgid "Remove selected installment entry"
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1186
-msgid "Example row: \"Visa; 1; 2; 10; 15\"."
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1187
-msgid "Explanation: All Visa cards get a 10% discount if customer pays in one payment or in two installments. Some Visa cards, issued by a specific issuer, get a 15% discount under the same conditions. To setup specific discounts, contact CorvusPay."
-msgstr ""
-
-#: includes/class-wc-gateway-corvuspay.php:1230
-#: includes/class-wc-gateway-corvuspay.php:1236
+#: includes/class-wc-gateway-corvuspay.php:1163
 msgid "No certificate stored. Only certificates in PKCS#12 (*.p12) format are supported."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1242
-#: includes/class-wc-gateway-corvuspay.php:1248
+#: includes/class-wc-gateway-corvuspay.php:1169
+#: includes/class-wc-gateway-corvuspay.php:1175
 msgid "Invalid certificate."
 msgstr ""
 
 #. translators: %1$s: Certificate Common Name, %2$s: Expiration date
-#: includes/class-wc-gateway-corvuspay.php:1254
+#: includes/class-wc-gateway-corvuspay.php:1181
 msgid "Certificate \"%1$s\" expired on %2$s."
 msgstr ""
 
 #. translators: %1$s: Certificate Common Name, %2$s: Expiration date
-#: includes/class-wc-gateway-corvuspay.php:1257
+#: includes/class-wc-gateway-corvuspay.php:1184
 msgid "Certificate \"%1$s\" will expire on %2$s."
 msgstr ""
 
 #. translators: %1$s: Certificate Common Name, %2$s: Expiration date
-#: includes/class-wc-gateway-corvuspay.php:1260
+#: includes/class-wc-gateway-corvuspay.php:1187
 msgid "Certificate \"%1$s\" is valid until %2$s."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1269
+#: includes/class-wc-gateway-corvuspay.php:1196
 msgid "Unable to store certificate."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1279
+#: includes/class-wc-gateway-corvuspay.php:1206
 msgid "Unable to read certificate. Please check password."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1289
+#: includes/class-wc-gateway-corvuspay.php:1216
 #: includes/class-wc-order-corvuspay.php:565
 msgid "Unsupported time limit value. Valid range is from 1 to 900."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1299
+#: includes/class-wc-gateway-corvuspay.php:1226
 msgid "The \"Order Number Format\" field is required and must contain {post_id} or {order_number}."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1309
+#: includes/class-wc-gateway-corvuspay.php:1236
 msgid "Certificate is required when tokenization is enabled."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1319
+#: includes/class-wc-gateway-corvuspay.php:1246
 msgid "Certificate is required when Advanced installments plan is set."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1329
+#: includes/class-wc-gateway-corvuspay.php:1256
 msgid "Invalid advanced installments."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1522
+#: includes/class-wc-gateway-corvuspay.php:1449
 msgid "CorvusPay Token ID"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1585
+#: includes/class-wc-gateway-corvuspay.php:1512
 msgid "CorvusPay Token ID is required."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1668
+#: includes/class-wc-gateway-corvuspay.php:1596
 msgid "Payment successful - payment card account debited."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1670
+#: includes/class-wc-gateway-corvuspay.php:1598
 msgid "Approval code: "
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1671
+#: includes/class-wc-gateway-corvuspay.php:1599
 msgid "Transaction date and time: "
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1687
+#: includes/class-wc-gateway-corvuspay.php:1615
 msgid "Capture Charge"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:1713
-#: includes/class-wc-gateway-corvuspay.php:2064
+#: includes/class-wc-gateway-corvuspay.php:1641
+#: includes/class-wc-gateway-corvuspay.php:2000
 msgid "You do not have sufficient permissions to perform this action."
 msgstr ""
 
 #. translators: %1$s: From status, %2$s: To status
-#: includes/class-wc-gateway-corvuspay.php:1916
-#: includes/class-wc-gateway-corvuspay.php:1950
+#: includes/class-wc-gateway-corvuspay.php:1844
+#: includes/class-wc-gateway-corvuspay.php:1878
 msgid "You are not allowed to change order from %1s to %2s."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:2025
+#: includes/class-wc-gateway-corvuspay.php:1960
 msgid "Check order status"
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:2076
+#: includes/class-wc-gateway-corvuspay.php:2016
 msgid "Failed to retrieve the order status."
 msgstr ""
 
-#: includes/class-wc-gateway-corvuspay.php:2080
+#: includes/class-wc-gateway-corvuspay.php:2020
 msgid "This is not a valid CorvusPay order."
+msgstr ""
+
+#: includes/class-wc-gateway-corvuspay.php:2083
+msgid "CorvusPay: changing card failed."
+msgstr ""
+
+#. translators: %s: CorvusPay token ID
+#: includes/class-wc-gateway-corvuspay.php:2132
+msgid "CorvusPay token updated. Token ID: %s."
+msgstr ""
+
+#. translators: %s: CorvusPay token ID. Indicates that customer triggered update for all subscriptions
+#: includes/class-wc-gateway-corvuspay.php:2140
+msgid "CorvusPay token updated. Token ID: %s. Customer triggered update for all subscriptions."
 msgstr ""
 
 #: includes/class-wc-order-corvuspay.php:257

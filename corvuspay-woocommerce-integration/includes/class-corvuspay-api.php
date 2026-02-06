@@ -104,7 +104,7 @@ class CorvusPay_API {
 	 * @throws Exception
 	 */
 	public function refund( $order, $amount = null ) {
-		$this->log->info( "Processing refund for Order #{$order->get_order_number()}." );
+		$this->log->info( "Processing refund for Order {$order->get_order_number()}." );
 
 		$partial_refund = ! ( is_null( $amount ) || ( $order->get_remaining_refund_amount() == 0 ) );
 
@@ -148,7 +148,7 @@ class CorvusPay_API {
 			$order->update_meta_data( '_corvuspay_action', 'refunded' );
 			$order->save_meta_data();
 		}
-	
+
 		if ( $partial_refund ) {
 			return 'partially_refunded' == $xml->{'status'};
 		} else {
@@ -172,7 +172,7 @@ class CorvusPay_API {
 
 		$token = WC_Payment_Tokens::get( $token );
 		if ( is_null( $token ) ) {
-			$this->log->error( "Failed to get token for Order #{$order->get_order_number()}." );
+			$this->log->error( "Failed to get token for Order {$order->get_order_number()}." );
 
 			return new WP_Error( 'order_token_error', __( 'Failed to get token for order.', 'corvuspay-woocommerce-integration' ) );
 		}
@@ -219,7 +219,7 @@ class CorvusPay_API {
 	 * @return bool|WP_Error Returns true on success, false on failure or WP_Error on error.
 	 */
 	public function complete( $order, $amount = null ) {
-		$this->log->info( "Processing complete for Order #{$order->get_id()}." );
+		$this->log->info( "Processing complete for Order {$order->get_id()}." );
 
 		$partial_complete = ! ( is_null( $amount ) || ( $order->get_total() == $amount ) );
 

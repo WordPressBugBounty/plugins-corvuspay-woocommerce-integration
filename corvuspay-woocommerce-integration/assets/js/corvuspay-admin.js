@@ -108,9 +108,11 @@ jQuery(function ($) {
 				var form_installments_map = $("#woocommerce_corvuspay_form_installments_map").parents("tr").eq(0);
 
 				if ($(this).val() === "map") {
-					form_installments_map.show();
+          form_installments_map.show()
+            .find(':input').prop('disabled', false);
 				} else {
-					form_installments_map.hide();
+          form_installments_map.hide()
+            .find(':input').prop('disabled', true);
 				}
 			});
 			$("#woocommerce_corvuspay_form_installments").change();
