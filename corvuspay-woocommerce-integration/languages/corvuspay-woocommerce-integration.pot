@@ -2,7 +2,7 @@
 # This file is distributed under the same license as the CorvusPay WooCommerce Payment Gateway plugin.
 msgid ""
 msgstr ""
-"Project-Id-Version: CorvusPay WooCommerce Payment Gateway 2.7.2\n"
+"Project-Id-Version: CorvusPay WooCommerce Payment Gateway 2.7.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/corvuspay-woocommerce-integration\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"

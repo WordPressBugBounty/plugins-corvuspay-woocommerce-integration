@@ -436,8 +436,8 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 				} else {
 					$this->log->notice( "Payment with token #{$token_id} for Order #{$order_id} failed." );
 
-					wc_add_notice( __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' ), 'error' );
-
+                    $message = __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' );
+                    $this->handle_message( $message, 'error', $order );
 					return null;
 				}
 
@@ -455,13 +455,16 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 					$order->update_status( 'failed', __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' ) );
 					$this->log->notice( "Payment with token #{$token_id} for Order #{$order_id} failed. Result is: " . wp_json_encode( $result ) );
 
-					wc_add_notice( __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' ), 'error' );
+                    $message = __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' );
+                    $this->handle_message( $message, 'error', $order );
 
 					return null;
 				}
 			} catch ( Exception $e ) {
 				$this->log->error( $e->getMessage() . ' $order_id: ' . wp_json_encode( $order_id ) );
-				wc_add_notice( __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' ), 'error' );
+
+                $message = __( 'CorvusPay payment failed.', 'corvuspay-woocommerce-integration' );
+                $this->handle_message( $message, 'error', $order );
 
 				return null;
 			}
@@ -710,7 +713,8 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 					$this->update_subscriptions_payment_token( $order, $token->get_id() );
 				}
 				else {
-					wc_add_notice( __( 'Payment method already exists.', 'corvuspay-woocommerce-integration' ), 'error' );
+                    $message = __( 'Payment method already exists.', 'corvuspay-woocommerce-integration' );
+                    $this->handle_message( $message, 'error', $order );
 				}
 				if ( 'add' === $order->get_meta( '_corvuspay_token' ) &&
 				     'auth' === $order->get_meta( '_corvuspay_action' ) &&
@@ -2192,7 +2196,9 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 
         if ( ! $token_id ) {
             $this->log->notice( "Failed to update token for Subscription #{$subscription->get_id()}." );
-            wc_add_notice( __( 'CorvusPay: changing card failed.', 'corvuspay-woocommerce-integration' ), 'error' );
+
+            $message = __( 'CorvusPay: changing card failed.', 'corvuspay-woocommerce-integration' );
+            $this->handle_message( $message, 'error' );
             return null;
         }
 
@@ -2321,5 +2327,38 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
             && class_exists('WC_Subscriptions_Change_Payment_Gateway')
             && WC_Subscriptions_Change_Payment_Gateway::$is_request_to_change_payment
         );
+    }
+
+    /**
+     * Displays a frontend notice or logs a backend message/order note, depending on the context.
+     *
+     * @param string              $message The message to display or log.
+     * @param string              $type    Notice type for frontend (e.g. 'error', 'success').
+     * @param WC_Order|false|null $order   Order object used for adding an order note.
+     */
+    private function handle_message( $message, $type = 'error', $order = null ) {
+        $is_background = wp_doing_cron()
+            || ( function_exists( 'as_has_scheduled_action' ) && did_action( 'action_scheduler_init' ) )
+            || ( defined( 'DOING_CRON' ) && DOING_CRON );
+
+        if ( $is_background ) {
+            $this->log->error( $message );
+
+            if ( $order instanceof WC_Order ) {
+                $order->add_order_note( $message );
+            }
+
+            return;
+        }
+
+        if ( function_exists( 'wc_add_notice' ) ) {
+            wc_add_notice( $message, $type );
+        } else {
+            $this->log->error( $message );
+
+            if ( $order instanceof WC_Order ) {
+                $order->add_order_note( $message );
+            }
+        }
     }
 }
