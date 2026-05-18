@@ -2,8 +2,8 @@
 Contributors: Corvus Pay d.o.o.
 Tags: payment, credit card, corvuspay, woocommerce
 Requires at least: 6.0
-Tested up to: 6.8
-Stable tag: 2.7.3
+Tested up to: 7
+Stable tag: 2.7.4
 Requires PHP: 7.4
 License: GNU General Public License v2.0 (or later)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -125,6 +125,9 @@ According to the Cash Transaction Fiscalization Law, cards are a payment method 
 10. CorvusPay Wallet stored credit card.
 
 == Changelog ==
+= 2.7.4 =
+* Changed: Removed unnecessary PHP SDK folders/files (examples, assets, configuration files) and updated WordPress 7 compatibility.
+
 = 2.7.3 =
 * Fixed: Prevented fatal error in cron (Action Scheduler) caused by wc_add_notice() usage in background context.
 
