@@ -779,7 +779,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		try {
 			$this->log->debug( 'Enter corvuspay_cancel_handler $_POST: ' . wp_json_encode( $_POST ) );
 
-			$order = new WC_Order_CorvusPay( $this->log, $this->options, 'callback' );
+			$order = new WC_Order_CorvusPay( $this->log, $this->options, 'callback-signed' );
 
 			$this->log->info( 'Cancel URL for Order ' . $order->get_id() . '.' );
 
@@ -1710,7 +1710,7 @@ class WC_Gateway_CorvusPay extends WC_Payment_Gateway_CC {
 		if ( isset( $approval_code ) && isset( $transaction_date ) ) {
 			echo '<p>' . __( 'Payment successful - payment card account debited.', 'corvuspay-woocommerce-integration' ) . '</p>
                   <ul>
-                    <li>' . __( 'Approval code: ', 'corvuspay-woocommerce-integration' ) . $approval_code . ' </li>
+                    <li>' . __( 'Approval code: ', 'corvuspay-woocommerce-integration' ) . esc_html( $approval_code ) . ' </li>
                     <li>' . __( 'Transaction date and time: ', 'corvuspay-woocommerce-integration' ) . $transaction_date . '</li>
                   </ul>';
 		}

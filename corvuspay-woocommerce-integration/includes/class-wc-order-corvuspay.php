@@ -174,20 +174,31 @@ class WC_Order_CorvusPay extends WC_Order {
 	        $post_id = $this->get_post_by_corvuspay_order_number( $this->parameters['order_number'] );
 
 	        if ( null === $post_id ) {
-		        $this->log->error( 'The parameter $post_id is null. There is no post with 
+		        $this->log->error( 'The parameter $post_id is null. There is no post with
 		        _corvuspay_order_number equals ' . $this->parameters['order_number'] );
 	        }
 
 	        parent::__construct( $post_id );
-			
-			if ( 'callback-signed' === $type ) {
-				if ( isset( $this->parameters["approval_code"] ) && $this->parameters["approval_code"] != null ) {
-					$this->update_meta_data( '_corvuspay_approval_code', $this->parameters["approval_code"] );
-					$this->update_meta_data( '_corvuspay_transaction_date', current_time( "d.m.Y H:i:s" ) );
-				}
+
+            if ( 'callback-signed' === $type ) {
                 $res = $this->client->validate->signature( $this->parameters );
-                $this->log->debug( 'Result from signature validation: ' . $res );
-			}
+                $this->log->debug( 'Result from signature validation: ' . ( $res ? 'true' : 'false' ) );
+
+                if ( ! $res ) {
+                    throw new Exception( 'Invalid CorvusPay signature.' );
+                }
+
+                if ( isset( $this->parameters['approval_code'] ) && null !== $this->parameters['approval_code'] ) {
+                    $this->update_meta_data(
+                        '_corvuspay_approval_code',
+                        sanitize_text_field( $this->parameters['approval_code'] )
+                    );
+                    $this->update_meta_data(
+                        '_corvuspay_transaction_date',
+                        current_time( 'd.m.Y H:i:s' )
+                    );
+                }
+            }
 		} elseif ( 'api' === $type || 'api-status' === $type || 'api-renew' === $type ) {
 	        /* Existing order for API */
 	        parent::__construct( $order );
@@ -699,7 +710,7 @@ class WC_Order_CorvusPay extends WC_Order {
      * Get post by meta value when meta key is "_corvuspay_order_number".
      *
      * @param string $corvuspay_order_number
-     * 
+     *
      * @return int|null id of last post with '_corvuspay_order_number' == $corvuspay_order_number or null if not exists.
      */
 	private function get_post_by_corvuspay_order_number( $corvuspay_order_number ) {
