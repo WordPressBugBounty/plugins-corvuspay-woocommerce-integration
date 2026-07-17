@@ -3,7 +3,7 @@ Contributors: Corvus Pay d.o.o.
 Tags: payment, credit card, corvuspay, woocommerce
 Requires at least: 6.0
 Tested up to: 7
-Stable tag: 2.7.5
+Stable tag: 2.7.6
 Requires PHP: 7.4
 License: GNU General Public License v2.0 (or later)
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -125,6 +125,9 @@ According to the Cash Transaction Fiscalization Law, cards are a payment method 
 10. CorvusPay Wallet stored credit card.
 
 == Changelog ==
+= 2.7.6 =
+* Fixed: Improved compatibility with Classic Checkout while preserving Blocks Checkout functionality.
+
 = 2.7.5 =
 * Changed: New version of DinaCard logo.
 * Improved: Added signature validation for CorvusPay success and cancel callback requests to prevent unauthorized order completion and cancellation.
