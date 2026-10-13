@@ -163,12 +163,6 @@ class WC_Order_CorvusPay extends WC_Order {
 				throw new Exception( 'WC_Order_CorvusPay expects $order to be null when $type is set to \'cardholder\'.' );
 			}
 
-	        /* Create CorvusPay Client */
-	        $config_params = ['store_id' => $this->get_store_id(), 'secret_key' => $this->get_secret_key(),
-	                          'environment' => $this->options->environment, 'logger' => $this->log, 'version' => '1.4'];
-	        $this->client = new CorvusPay\CorvusPayClient( $config_params );
-
-	        // TODO add filter
 	        $this->parameters = filter_input_array( INPUT_POST );
 
 	        $post_id = $this->get_post_by_corvuspay_order_number( $this->parameters['order_number'] );
@@ -178,7 +172,16 @@ class WC_Order_CorvusPay extends WC_Order {
 		        _corvuspay_order_number equals ' . $this->parameters['order_number'] );
 	        }
 
+            /*
+             * Load the WooCommerce order first.
+             * Currency routing must use the actual order currency.
+             */
 	        parent::__construct( $post_id );
+
+            /* Create CorvusPay Client */
+            $config_params = ['store_id' => $this->get_store_id(), 'secret_key' => $this->get_secret_key(),
+                'environment' => $this->options->environment, 'logger' => $this->log, 'version' => '1.4'];
+            $this->client = new CorvusPay\CorvusPayClient( $config_params );
 
             if ( 'callback-signed' === $type ) {
                 $res = $this->client->validate->signature( $this->parameters );
